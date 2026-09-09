@@ -102,9 +102,6 @@ Interactive-3D-Museum/
 ├── Code/
 │   └── 09_10_Animation/
 │
-├── Executable/
-│   └── MuseoVirt.exe
-│
 ├── Documentation/
 │   ├── UserManual.pdf
 │   └── TechnicalReport.pdf
@@ -116,11 +113,10 @@ Interactive-3D-Museum/
 
 ### Windows
 
-1. Open the `Executable` folder.
-2. Download `MuseoVirt.exe`.
-3. Run the installer.
-4. Follow the installation instructions.
-5. Launch the application from the installed `MuseoVirt` directory.
+1. Download `MuseoVirt.exe`.
+2. Run the installer.
+3. Follow the installation instructions.
+4. Launch the application from the installed `MuseoVirt` directory.
 
 The installer contains the resources required to run the museum, including models, textures, shaders, and other dependencies.
 
