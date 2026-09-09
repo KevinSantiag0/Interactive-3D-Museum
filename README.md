@@ -1,241 +1,158 @@
 # Interactive 3D Virtual Museum
 
-An interactive 3D virtual museum developed in **C++ using OpenGL and GLSL** as a final project for the *Computer Graphics and Human-Computer Interaction* course at the **National Autonomous University of Mexico (UNAM)**.
+A navigable 3D museum built in **C++ with OpenGL and GLSL**, combining real-time graphics, interactive exhibits, animation and environmental education.
 
-The application combines real-time rendering, 3D modeling, animation, shaders, user interaction, and educational content in a navigable virtual environment.
+Visitors explore three thematic rooms — marine life, endangered species and a planetarium — where proximity-based interactions reveal educational content, animations can be triggered, and a HUD tracks the user's progress through the museum.
 
-## Overview
+Developed as the final project for the *Computer Graphics and Human-Computer Interaction* course at UNAM, Faculty of Engineering.
 
-The museum is divided into three thematic areas:
+⬇️ [**Download the installer**](https://github.com/KevinSantiag0/Interactive-3D-Museum/releases/latest) (Windows)  
+📄 [**Technical Report**](docs/TechnicalReport.pdf)  
+📘 [**User Manual**](docs/UserManual.pdf)
 
-- **Marine Life**
-- **Endangered and Extinct Species**
-- **Planetarium**
+---
 
-Users can freely explore the museum, switch between camera modes, interact with exhibits, view educational information, activate animations, and track their progress through the different rooms.
+## My Role
 
-## Technologies
+Academic team project developed by a **team of 5 students**. My work focused on programming and integration, project organization, partial 3D modeling and documentation.
 
-- **C++**
-- **OpenGL 3.3**
-- **GLSL**
-- **GLFW**
-- **GLAD**
-- **GLM**
-- **Assimp**
-- **stb_image**
-- **FreeType**
-- **irrKlang**
-- **Blender**
-- **Visual Studio 2022**
+- **Interaction and exhibit logic** — co-implemented the proximity-based interaction system used to detect nearby exhibits and trigger contextual actions such as animal information panels, educational panel zoom and planetarium activation.
+- **HUD and room progression** — co-implemented the on-screen interface and the state system that tracks each room as *unvisited → in progress → completed* and displays a completion message after all three areas have been explored.
+- **Integration and interactive presentation** — integrated interactive elements into the OpenGL scene, including environmental audio, models, textures and user-facing controls.
 
-## Main Features
+---
 
-### Real-Time 3D Rendering
-The application implements a complete real-time graphics pipeline using OpenGL and custom GLSL shaders.
+## Technical Highlights
 
-### Lighting and Materials
-The project includes:
+### Interaction system
 
-- Phong lighting
-- Ambient, diffuse, and specular components
-- Fresnel-Schlick approximation
-- Environment cube mapping
-- Textured 3D models
+Interactions are implemented using **distance-based trigger volumes**.
 
-### Animation Systems
+Each interactive exhibit stores a world-space position and an interaction radius. At runtime, the application computes the Euclidean distance between the interaction point and each exhibit using `glm::distance()`.
 
-Three animation approaches were implemented:
+The interaction point depends on the current camera mode:
 
-- Basic transformation-based animation
-- Procedural animation
-- Keyframe and skeletal animation
+- in free-camera mode, the camera position is used;
+- in first- and third-person modes, the player position is used.
 
-Examples include:
+This approach kept interaction logic simple and inexpensive for a scene of this scale while allowing the same system to drive animal information panels, educational posters, room detection and planetarium controls.
 
-- Planetary rotation and orbit
-- Moving stars
-- Animated astronaut
-- Animated fish
-- Interactive doors and objects
+Its main limitation is that triggers are spherical and based only on distance: they do not perform ray casting, visibility tests or object-level collision detection.
 
-### Camera System
+### Animation
 
-The museum includes multiple camera modes:
+Several animation techniques coexist because the museum contains objects with different motion requirements.
 
-- Free camera
-- First-person camera
-- Third-person camera
+**Skeletal/keyframe animation** is used for imported animated characters and fish.
+**Procedural motion** is used when behavior must be generated continuously at runtime.
+**Transformation-based animation** is used for deterministic motions such as planetary orbits, rotations and interactive scene objects.
 
-### Interactive Exhibits
+The fish system combines both approaches: each fish runs its imported skeletal animation while its world-space position is updated procedurally. Fish move with individual speed and direction values, reflect their direction vector when reaching the boundary of the pool, and use a sinusoidal vertical offset to produce a swimming motion.
 
-The application detects the player's proximity to interactive objects.
+The planetarium uses runtime transformations to calculate orbital positions around the Sun and allows the user to enable or disable planetary motion interactively.
 
-Depending on the exhibit, users can:
+### Lighting, materials and environment
 
-- Display information about animals
-- Zoom into educational panels
-- Activate the planetary system
-- Interact with animated objects
+The scene uses a multi-light **Phong illumination model** with configurable ambient, diffuse and specular material properties.
 
-### Museum Progress System
+Different material configurations are used for scene elements. Water, for example, uses strong specular reflection and alpha blending to produce a translucent surface, while a separate material configuration is used for the animated astronaut.
 
-A HUD tracks the user's progress through the three museum areas.
+A six-face **cube map** surrounds the museum and provides the environment background.
 
-Rooms change state depending on whether they:
+The rendering pipeline also includes dedicated shaders for procedural animation, skeletal animation, water effects, text rendering and the 2D interface.
 
-- Have not been visited
-- Are currently being explored
-- Have already been completed
+### Camera system
 
-After visiting all three rooms, the application displays a completion message.
+Three camera modes can be switched at runtime:
 
-### Audio
+- **Free camera** — independent navigation through the scene.
+- **First-person camera** — positioned at the player's eye level and aligned with the player's viewing direction.
+- **Third-person camera** — positioned behind and above the player while looking toward the character.
 
-Environmental audio changes depending on the room currently being explored using the **irrKlang** audio library.
+Mouse input updates yaw and pitch, while movement in character-controlled modes is constrained to the horizontal plane.
 
-## Project Structure
+### HUD and room progression
 
-```text
-Interactive-3D-Museum/
-│
-├── Code/
-│   └── 09_10_Animation/
-│
-├── Documentation/
-│   ├── UserManual.pdf
-│   └── TechnicalReport.pdf
-│
-└── README.md
-```
+The museum maintains a state for each thematic room.
 
-## Running the Application
+Entering a room marks it as visited, while the HUD visually communicates whether a room is currently being explored or has already been completed. Once all three rooms have been visited and the player has left the active room, a temporary museum-completion message is displayed.
 
-### Windows
+The same 2D rendering layer is used for contextual prompts, animal information panels, the controls overlay and interaction hints.
 
-1. Download `MuseoVirt.exe`.
-2. Run the installer.
-3. Follow the installation instructions.
-4. Launch the application from the installed `MuseoVirt` directory.
+### Environmental audio
 
-The installer contains the resources required to run the museum, including models, textures, shaders, and other dependencies.
+Environmental audio is managed using **irrKlang**.
 
-For detailed installation and control instructions, see:
+The application detects the room currently occupied by the visitor and switches the looping ambient track accordingly. Separate audio environments are used for the aquarium, the planetarium, the endangered-species room and the central museum area.
 
-`Documentation/UserManual.pdf`
+A track is only replaced when the detected room changes, avoiding unnecessary audio restarts.
+
+---
+
+## Technology Stack
+
+**Graphics & programming** — C++ · OpenGL 3.3 · GLSL · GLFW · GLAD · GLM
+
+**Assets & rendering** — Assimp · stb_image · FreeType · Blender
+
+**Audio** — irrKlang
+
+**Development** — Visual Studio · MSVC
+
+---
+
+## Running It
+
+Download the installer from the [latest release](https://github.com/KevinSantiag0/Interactive-3D-Museum/releases/latest), run it, and launch `MuseoVirt` from the install directory. Models, textures, shaders and audio are bundled.
+
+Source code is under `Code/`. The project builds through a Visual Studio solution targeting Windows.
+
+---
+
+## Limitations
+
+- **Windows-only.** The project targets a Visual Studio solution and ships as a Windows installer, so it does not build or run on macOS or Linux without reworking the build configuration. Migrating to CMake would remove this constraint.
+- **Distance-only interaction triggers.** Exhibit detection relies on spherical volumes without ray casting or visibility tests, so an exhibit can be triggered through a wall if the visitor is close enough on the other side.
+
+<!-- TODO: add 1-2 more from the Limitations section of the technical report.
+     Candidates worth checking: absence of spatial partitioning (render cost scales
+     linearly with scene objects), shadow handling, collision precision, model load
+     times or memory footprint, hardcoded scene layout. Write only what was true. -->
+
+---
 
 ## Controls
 
-Some of the main controls include:
+| Action | Key | Action | Key |
+|---|---|---|---|
+| Move | W / A / S / D | Controls menu | TAB |
+| Look | Mouse | Wireframe | M |
+| Camera modes | F1 / F2 / F3 | Normal rendering | N |
+| Animal information | F | Point rendering | B |
+| Panel zoom | V | Return to start | O |
+| Planetary system | P | Exit | ESC |
 
-| Action | Key |
-|---|---|
-| Move | W / A / S / D |
-| Move camera | Mouse |
-| Camera modes | F1 / F2 / F3 |
-| Animal information | F |
-| Planetarium panel zoom | V |
-| Activate planetary system | P |
-| Controls menu | TAB |
-| Wireframe mode | M |
-| Normal rendering | N |
-| Point rendering | B |
-| Return to start | O |
-| Exit | ESC |
+The full control list is in the user manual and in-app via **TAB**.
 
-More controls are documented in the user manual and can also be displayed inside the application by pressing **TAB**.
+---
 
-## Technical Documentation
+## Team & Context
 
-The repository contains two supporting documents:
+UNAM, Faculty of Engineering — Computer Engineering.
+Course: Computer Graphics and Human-Computer Interaction. Completed May 2026.
 
-### Technical Report
-
-`Documentation/TechnicalReport.pdf`
-
-Includes:
-
-- Project methodology
-- Software architecture
-- Graphics pipeline
-- Modeling workflow
-- Shader implementation
-- Animation systems
-- Interaction design
-- Experiments
-- Results
-- Limitations and future improvements
-
-### User Manual
-
-`Documentation/UserManual.pdf`
-
-Includes:
-
-- Software requirements
-- Installation instructions
-- Controls
-- Room descriptions
-- Application usage
-
-## My Contributions
-
-This was a **team academic project**.
-
-My work included participation in:
-
-- Project conceptualization and design
-- 3D modeling and optimization in Blender
-- Model and texture integration into OpenGL
-- C++ development and debugging
-- Contextual proximity-based interactions
-- On-screen menus and HUD elements
-- Museum room progression system
-- Environmental audio integration
-- Testing and integration of graphics and interactive components
-
-## Screenshots
-
-Screenshots and a demonstration video will be added to showcase:
-
-- Marine Life room
-- Planetarium
-- Endangered Species room
-- Interactive information panels
-- Camera modes
-- Animation systems
-- Museum progress HUD
-
-## Future Improvements
-
-Possible future improvements include:
-
-- Web-based version of the museum
-- Improved accessibility controls
-- Additional museum rooms
-- More interactive exhibits
-- Educational assessment at the end of the experience
-- Further graphics and performance optimization
-
-## Academic Context
-
-**National Autonomous University of Mexico — UNAM**  
-Faculty of Engineering  
-Computer Engineering  
-
-Course: **Computer Graphics and Human-Computer Interaction**
-
-Academic project completed in **May 2026**.
-
-## Authors
+Team of 5 students, including:
 
 - Josue Cardoso Martínez
 - Kevin Santiago González
 
-Additional collaborators participated in the development of the project.
+<!-- TODO: list the remaining team members, or remove this line if you prefer to keep
+     only the two names and state the team size above. -->
 
 ## Acknowledgements
 
-The project uses several external libraries and tools including OpenGL, GLFW, GLAD, GLM, Assimp, stb_image, Blender, FreeType and irrKlang.
+Built with OpenGL, GLFW, GLAD, GLM, Assimp, stb_image, FreeType and irrKlang. Third-party libraries retain their own licenses. Full references are listed in the technical report.
 
-Some external resources and tools were also used during the modeling and animation workflow. Full references and acknowledgements are available in the technical report.
+## License
+
+MIT — see [LICENSE](LICENSE).
